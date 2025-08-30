@@ -8,7 +8,25 @@
     <title>KubeAtlas - Kubernetes Management Platform</title>
   </head>
   <body>
+    <div data-us-project="VFxAqwq71K87dBDhgIS8"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script type="text/javascript">!function(){if(!window.UnicornStudio){window.UnicornStudio={isInitialized:!1};var i=document.createElement("script");i.src="https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.4.29/dist/unicornStudio.umd.js",i.onload=function(){window.UnicornStudio.isInitialized||(UnicornStudio.init(),window.UnicornStudio.isInitialized=!0)},(document.head || document.body).appendChild(i)}}();</script>
+    <script>
+      // Force resize Unicorn Studio background
+      function resizeBackground() {
+        const bg = document.querySelector('[data-us-project]');
+        if (bg) {
+          bg.style.width = window.innerWidth + 'px';
+          bg.style.height = window.innerHeight + 'px';
+        }
+      }
+      
+      window.addEventListener('load', resizeBackground);
+      window.addEventListener('resize', resizeBackground);
+      
+      // Also try to resize after Unicorn Studio loads
+      setTimeout(resizeBackground, 2000);
+    </script>
   </body>
 </html>

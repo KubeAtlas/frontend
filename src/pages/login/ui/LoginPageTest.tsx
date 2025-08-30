@@ -37,10 +37,6 @@ export const LoginPageTest = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundImage: 'url(/background-images/image.png)',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -52,12 +48,13 @@ export const LoginPageTest = () => {
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: 'rgba(0, 0, 0, 0.4)',
-        backdropFilter: 'blur(1px)'
+        background: 'rgba(0, 0, 0, 0.1)',
+        backdropFilter: 'blur(0.5px)',
+        zIndex: 1
       }} />
 
       {/* Основной контент */}
-      <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: '400px' }}>
+      <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: '400px' }}>
         {/* Заголовок */}
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
           <h1 style={{
