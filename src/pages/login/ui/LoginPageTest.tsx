@@ -1,6 +1,9 @@
 import { useState } from 'react'
+import { useLocale } from '../../../shared/lib/locale/LocaleContext'
+import { LanguageSwitcher } from '../../../widgets/language-switcher/ui/LanguageSwitcher'
 
 export const LoginPageTest = () => {
+  const { t } = useLocale()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -11,7 +14,7 @@ export const LoginPageTest = () => {
     e.preventDefault()
     
     if (!username || !password) {
-      setError('Пожалуйста, заполните все поля')
+      setError(t('error_fill_fields'))
       return
     }
 
@@ -23,12 +26,12 @@ export const LoginPageTest = () => {
       await new Promise(resolve => setTimeout(resolve, 1000))
       
       if (username === 'admin' && password === 'admin123') {
-        alert('Успешный вход!')
+        alert(t('welcome'))
       } else {
-        setError('Неверные учетные данные')
+        setError(t('error_wrong_credentials'))
       }
     } catch (err) {
-      setError('Произошла ошибка при входе')
+      setError(t('error_login_failed'))
     } finally {
       setIsLoading(false)
     }
@@ -44,6 +47,16 @@ export const LoginPageTest = () => {
       position: 'relative',
       overflow: 'hidden'
     }}>
+      {/* Виджет переключения языка */}
+      <div style={{
+        position: 'absolute',
+        top: '20px',
+        right: '20px',
+        zIndex: 10
+      }}>
+        <LanguageSwitcher />
+      </div>
+
       {/* Затемнение для лучшей читаемости */}
       <div style={{
         position: 'absolute',
@@ -75,7 +88,7 @@ export const LoginPageTest = () => {
             fontWeight: '300',
             marginBottom: '16px'
           }}>
-            Центр управления кластером
+            {t('cluster_management')}
           </p>
         </div>
 
@@ -114,13 +127,13 @@ export const LoginPageTest = () => {
               color: 'white',
               marginBottom: '8px'
             }}>
-              Добро пожаловать
+              {t('welcome')}
             </h2>
             <p style={{
               color: '#d1d5db',
               fontSize: '14px'
             }}>
-              Войдите в систему для доступа к KubeAtlas
+              {t('login_system')}
             </p>
           </div>
 
@@ -134,7 +147,7 @@ export const LoginPageTest = () => {
                 marginBottom: '6px',
                 marginLeft: '2px'
               }}>
-                Имя пользователя
+                {t('username')}
               </label>
               <input
                 type="text"
@@ -152,7 +165,7 @@ export const LoginPageTest = () => {
                   transition: 'all 0.3s ease',
                   boxSizing: 'border-box'
                 }}
-                placeholder="Введите имя пользователя"
+                placeholder={t('enter_username')}
                 disabled={isLoading}
                 required
               />
@@ -167,7 +180,7 @@ export const LoginPageTest = () => {
                 marginBottom: '6px',
                 marginLeft: '2px'
               }}>
-                Пароль
+                {t('password')}
               </label>
               <div style={{ position: 'relative' }}>
                 <input
@@ -186,7 +199,7 @@ export const LoginPageTest = () => {
                     transition: 'all 0.3s ease',
                     boxSizing: 'border-box'
                   }}
-                  placeholder="Введите пароль"
+                  placeholder={t('enter_password')}
                   disabled={isLoading}
                   required
                 />
@@ -269,12 +282,12 @@ export const LoginPageTest = () => {
                     borderRadius: '50%',
                     animation: 'spin 1s linear infinite'
                   }} />
-                  <span>Вход...</span>
+                  <span>{t('loading')}</span>
                 </>
               ) : (
                 <>
                   <span style={{ fontSize: '20px', color: 'white' }}>→</span>
-                  <span>Войти в систему</span>
+                  <span>{t('login')}</span>
                 </>
               )}
             </button>
@@ -292,7 +305,7 @@ export const LoginPageTest = () => {
               textAlign: 'center',
               marginBottom: '12px'
             }}>
-              Демо-доступ:
+              {t('demo_access')}
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
               <button
