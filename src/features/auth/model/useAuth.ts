@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AuthCredentials, AuthState } from '../../../entities/user/model/types'
+import type { AuthCredentials, AuthState } from '../../../entities/user/model/types'
 
 export const useAuth = () => {
   const [authState, setAuthState] = useState<AuthState>({

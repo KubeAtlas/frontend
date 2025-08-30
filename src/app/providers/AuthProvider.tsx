@@ -1,6 +1,7 @@
-import { createContext, useContext, ReactNode } from 'react'
+import { createContext, useContext } from 'react'
+import type { ReactNode } from 'react'
 import { useAuth } from '../../features/auth'
-import { AuthState } from '../../entities/user/model/types'
+import type { AuthState } from '../../entities/user/model/types'
 
 interface AuthContextType extends AuthState {
   login: (credentials: { username: string; password: string }) => Promise<{ success: boolean; user?: any; error?: string }>

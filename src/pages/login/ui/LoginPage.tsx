@@ -261,10 +261,10 @@ export const LoginPage = () => {
                     }}
                     disabled={isLoading}
                     onMouseEnter={(e) => {
-                      e.target.style.color = 'white'
+                      (e.target as HTMLElement).style.color = 'white'
                     }}
                     onMouseLeave={(e) => {
-                      e.target.style.color = '#9ca3af'
+                      (e.target as HTMLElement).style.color = '#9ca3af'
                     }}
                   >
                     {showPassword ? '🙈' : '👁️'}
