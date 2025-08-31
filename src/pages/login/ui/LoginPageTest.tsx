@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useLocale } from '../../../shared/lib/locale/LocaleContext'
 import { LanguageSwitcher } from '../../../widgets/language-switcher/ui/LanguageSwitcher'
+import { AnimatedLockIcon } from '../../../shared/ui/AnimatedLockIcon/AnimatedLockIcon'
 
 export const LoginPageTest = () => {
   const { t } = useLocale()
@@ -9,6 +10,16 @@ export const LoginPageTest = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [isLoginSuccess, setIsLoginSuccess] = useState(false)
+
+  const handleAnimationComplete = () => {
+    // Сбрасываем состояние через некоторое время
+    setTimeout(() => {
+      setIsLoginSuccess(false)
+      setUsername('')
+      setPassword('')
+    }, 1000)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,7 +37,11 @@ export const LoginPageTest = () => {
       await new Promise(resolve => setTimeout(resolve, 1000))
       
       if (username === 'admin' && password === 'admin123') {
-        alert(t('welcome'))
+        setIsLoginSuccess(true)
+        // Через 2 секунды после анимации показываем приветствие
+        setTimeout(() => {
+          alert(t('welcome'))
+        }, 2000)
       } else {
         setError(t('error_wrong_credentials'))
       }
@@ -112,13 +127,17 @@ export const LoginPageTest = () => {
               width: '48px',
               height: '48px',
               marginBottom: '16px',
-              background: '#3b82f6',
+              background: isLoginSuccess ? '#10b981' : '#3b82f6',
               borderRadius: '12px',
-              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+              boxShadow: isLoginSuccess 
+                ? '0 4px 12px rgba(16, 185, 129, 0.3)' 
+                : '0 4px 12px rgba(59, 130, 246, 0.3)',
+              transition: 'all 0.3s ease'
             }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 8H17V6C17 3.24 14.76 1 12 1S7 3.24 7 6V8H6C4.9 8 4 8.9 4 10V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10C20 8.9 19.1 8 18 8ZM12 17C10.9 17 10 16.1 10 15S10.9 13 12 13S14 13.9 14 15S13.1 17 12 17ZM15.1 8H8.9V6C8.9 4.29 10.29 2.9 12 2.9S15.1 4.29 15.1 6V8Z" fill="white"/>
-              </svg>
+              <AnimatedLockIcon 
+                isUnlocked={isLoginSuccess} 
+                onAnimationComplete={handleAnimationComplete}
+              />
             </div>
             
             <h2 style={{
