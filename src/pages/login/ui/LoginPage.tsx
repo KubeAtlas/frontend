@@ -1,9 +1,20 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useAuthContext } from '../../../app/providers/AuthProvider'
+import { useNavigate } from 'react-router-dom'
 import { useLocale } from '../../../shared/lib/locale/LocaleContext'
 import { LanguageSwitcher } from '../../../widgets/language-switcher/ui/LanguageSwitcher'
 import { AnimatedLockIcon } from '../../../shared/ui/AnimatedLockIcon/AnimatedLockIcon'
 
 export const LoginPage = () => {
+  const { login } = useAuthContext()
+  const navigate = useNavigate()
+  useEffect(() => {
+    // Включаем фоновую анимацию только на логине
+    document.body.classList.add('login-bg')
+    return () => {
+      document.body.classList.remove('login-bg')
+    }
+  }, [])
   const { t } = useLocale()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -31,29 +42,18 @@ export const LoginPage = () => {
 
     setIsLoading(true)
     setError('')
-
-    try {
-      // Имитация запроса
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      if (username === 'admin' && password === 'admin123') {
-        setIsLoginSuccess(true)
-        // Через 2 секунды после анимации показываем приветствие
-        setTimeout(() => {
-          alert(t('welcome'))
-        }, 2000)
-      } else {
-        setError(t('error_wrong_credentials'))
-      }
-    } catch (err) {
-      setError(t('error_login_failed'))
-    } finally {
-      setIsLoading(false)
+    const res = await login({ username, password })
+    setIsLoading(false)
+    if (res.success) {
+      setIsLoginSuccess(true)
+      setTimeout(() => navigate('/dashboard', { replace: true }), 800)
+    } else {
+      setError(res.error || t('error_login_failed'))
     }
   }
 
   return (
-    <div style={{
+    <div className="login-page" style={{
       minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
@@ -329,8 +329,8 @@ export const LoginPage = () => {
             <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
               <button
                 onClick={() => {
-                  setUsername('admin')
-                  setPassword('admin123')
+                  setUsername('admin-service')
+                  setPassword('AdminPassw0rd!')
                 }}
                 style={{
                   padding: '8px 16px',
@@ -344,13 +344,13 @@ export const LoginPage = () => {
                   transition: 'all 0.2s ease'
                 }}
               >
-                admin
+                admin-service
               </button>
               <span style={{ color: '#6b7280' }}>/</span>
               <button
                 onClick={() => {
-                  setUsername('admin')
-                  setPassword('admin123')
+                  setUsername('admin-service')
+                  setPassword('AdminPassw0rd!')
                 }}
                 style={{
                   padding: '8px 16px',
@@ -364,7 +364,7 @@ export const LoginPage = () => {
                   transition: 'all 0.2s ease'
                 }}
               >
-                admin123
+                AdminPassw0rd!
               </button>
             </div>
           </div>
