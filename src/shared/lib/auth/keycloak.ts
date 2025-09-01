@@ -20,14 +20,26 @@ export async function initAuth() {
 }
 
 export async function ensureToken(minValiditySeconds = 30) {
-  // Не делаем редирект на Keycloak здесь, чтобы не уводить пользователя со страницы логина
-  if (!keycloak.token) throw new Error('No token')
+  if (!keycloak.token) {
+    console.error('No token available')
+    throw new Error('No token available')
+  }
+  
   try {
-    await keycloak.updateToken(minValiditySeconds)
-  } catch {
+    const refreshed = await keycloak.updateToken(minValiditySeconds)
+    if (refreshed) {
+      console.log('Token refreshed successfully')
+    }
+  } catch (error) {
+    console.error('Failed to refresh token:', error)
     // Если не удалось обновить, пробуем продолжить с текущим (может быть ещё валиден)
   }
-  if (!keycloak.token) throw new Error('No token after update')
+  
+  if (!keycloak.token) {
+    console.error('No token after update attempt')
+    throw new Error('No token after update')
+  }
+  
   return keycloak.token
 }
 

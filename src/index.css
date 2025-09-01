@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* Unicorn Studio background: по умолчанию скрыт */
 [data-us-project] { display: none !important; }

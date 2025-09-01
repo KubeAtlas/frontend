@@ -1,1 +1,1 @@
-export { Logo } from './ui'
+export { Logo, Header } from './ui'
