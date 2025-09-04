@@ -23,7 +23,11 @@ function App() {
 
 function PrivateRoute({ children }: { children: ReactElement }) {
   const { isAuthenticated, isLoading } = useAuthContext()
-  if (isLoading) return null
+  if (isLoading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-slate-400">Загрузка...</div>
+    </div>
+  )
   return isAuthenticated ? children : <Navigate to="/login" replace />
 }
 

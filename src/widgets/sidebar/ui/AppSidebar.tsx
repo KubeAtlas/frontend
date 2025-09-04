@@ -3,6 +3,7 @@ import { useAuthContext } from '../../../app/providers/AuthProvider'
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { apiGet } from '../../../shared/lib/api/client'
+import { useLocale } from '../../../shared/lib/locale/LocaleContext'
 
 interface Profile { id: string; username: string; email?: string; firstName?: string; lastName?: string }
 
@@ -11,6 +12,7 @@ export function AppSidebar() {
   const navigate = useNavigate()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [roles, setRoles] = useState<string[]>([])
+  const { t } = useLocale()
 
   useEffect(() => {
     let mounted = true
@@ -67,7 +69,7 @@ export function AppSidebar() {
         <div className="space-y-3">
           <div className="text-xs font-semibold text-slate-400 mb-6 flex items-center">
             <Sparkles className="h-3 w-3 mr-2" />
-            MANAGEMENT
+            {t('management')}
           </div>
           
           <div className="space-y-3">
@@ -75,7 +77,7 @@ export function AppSidebar() {
               <div className="p-2 rounded-lg bg-blue-500/20">
                 <Users className="h-4 w-4 text-blue-400" />
               </div>
-              <span className="font-medium text-white">Users</span>
+              <span className="font-medium text-white">{t('users')}</span>
               <div className="ml-auto">
                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
               </div>
@@ -85,24 +87,24 @@ export function AppSidebar() {
               <div className="p-2 rounded-lg bg-purple-500/20">
                 <Shield className="h-4 w-4 text-purple-400" />
               </div>
-              <span className="font-medium text-white">Security</span>
-              <div className="ml-auto text-xs text-slate-400">Soon</div>
+              <span className="font-medium text-white">{t('security')}</span>
+              <div className="ml-auto text-xs text-slate-400">{t('soon')}</div>
             </div>
             
             <div className="flex items-center space-x-3 p-3 rounded-xl opacity-50 cursor-not-allowed">
               <div className="p-2 rounded-lg bg-emerald-500/20">
                 <Activity className="h-4 w-4 text-emerald-400" />
               </div>
-              <span className="font-medium text-white">Monitoring</span>
-              <div className="ml-auto text-xs text-slate-400">Soon</div>
+              <span className="font-medium text-white">{t('monitoring')}</span>
+              <div className="ml-auto text-xs text-slate-400">{t('soon')}</div>
             </div>
             
             <div className="flex items-center space-x-3 p-3 rounded-xl opacity-50 cursor-not-allowed">
               <div className="p-2 rounded-lg bg-orange-500/20">
                 <Settings className="h-4 w-4 text-orange-400" />
               </div>
-              <span className="font-medium text-white">Settings</span>
-              <div className="ml-auto text-xs text-slate-400">Soon</div>
+              <span className="font-medium text-white">{t('settings')}</span>
+              <div className="ml-auto text-xs text-slate-400">{t('soon')}</div>
             </div>
           </div>
         </div>
@@ -120,7 +122,7 @@ export function AppSidebar() {
           <div className="p-2 rounded-lg bg-red-500/20">
             <LogOut className="h-4 w-4 text-red-400" />
           </div>
-          <span className="font-medium text-white">Logout</span>
+          <span className="font-medium text-white">{t('logout')}</span>
         </div>
       </div>
     </div>

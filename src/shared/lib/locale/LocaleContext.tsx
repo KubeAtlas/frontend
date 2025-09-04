@@ -29,7 +29,29 @@ const translations = {
     'demo_access': 'Демо-доступ:',
     'language': 'Язык',
     'russian': 'Русский',
-    'english': 'English'
+    'english': 'English',
+    
+    // Дашборд
+    'dashboard_title': 'KubeAtlas',
+    'dashboard_subtitle': 'Kubernetes Management Platform',
+    'database': 'База данных',
+    'online': 'Онлайн',
+    'response_time': 'Время отклика',
+    'create_user': 'Создать пользователя',
+    'total_users': 'Всего пользователей',
+    'active_sessions': 'Активные сессии',
+    'system_health': 'Состояние системы',
+    'from_last_month': 'с прошлого месяца',
+    'from_last_hour': 'с прошлого часа',
+    'all_systems_operational': 'Все системы работают',
+    'management': 'УПРАВЛЕНИЕ',
+    'users': 'Пользователи',
+    'security': 'Безопасность',
+    'monitoring': 'Мониторинг',
+    'settings': 'Настройки',
+    'soon': 'Скоро',
+    'logout': 'Выйти',
+    'loading_dashboard': 'Загружаем KubeAtlas...'
   },
   en: {
     // General
@@ -48,7 +70,29 @@ const translations = {
     'demo_access': 'Demo access:',
     'language': 'Language',
     'russian': 'Русский',
-    'english': 'English'
+    'english': 'English',
+    
+    // Dashboard
+    'dashboard_title': 'KubeAtlas',
+    'dashboard_subtitle': 'Kubernetes Management Platform',
+    'database': 'Database',
+    'online': 'Online',
+    'response_time': 'Response time',
+    'create_user': 'Create User',
+    'total_users': 'Total Users',
+    'active_sessions': 'Active Sessions',
+    'system_health': 'System Health',
+    'from_last_month': 'from last month',
+    'from_last_hour': 'from last hour',
+    'all_systems_operational': 'All systems operational',
+    'management': 'MANAGEMENT',
+    'users': 'Users',
+    'security': 'Security',
+    'monitoring': 'Monitoring',
+    'settings': 'Settings',
+    'soon': 'Soon',
+    'logout': 'Logout',
+    'loading_dashboard': 'Loading KubeAtlas...'
   }
 }
 

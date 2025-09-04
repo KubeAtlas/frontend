@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { AuthState, User } from '../../entities/user/model/types'
-import { keycloak, initAuth, loginWithPasswordGrant } from '../../shared/lib/auth/keycloak'
+import { keycloak, initAuth, loginWithPasswordGrant, clearTokens } from '../../shared/lib/auth/keycloak'
 import { apiGet } from '../../shared/lib/api/client'
 
 interface AuthContextType extends AuthState {
@@ -22,16 +22,35 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     let mounted = true
     ;(async () => {
       try {
-        await initAuth()
-        const token = keycloak.token
-        if (token) {
-          const profile = await apiGet<User>('/user/profile')
-          if (!mounted) return
-          setState({ user: profile, isAuthenticated: true, isLoading: false, error: null })
+        console.log('Initializing auth...')
+        const authenticated = await initAuth()
+        console.log('Auth initialized, authenticated:', authenticated)
+        
+        if (authenticated && keycloak.token) {
+          console.log('User is authenticated, loading profile...')
+          try {
+            const profile = await apiGet<User>('/user/profile')
+            if (!mounted) return
+            console.log('Profile loaded:', profile)
+            setState({ user: profile, isAuthenticated: true, isLoading: false, error: null })
+          } catch (profileError) {
+            console.error('Failed to load profile:', profileError)
+            if (!mounted) return
+            // Если профиль не загрузился из-за ошибки аутентификации, считаем пользователя неавторизованным
+            if (profileError instanceof Error && profileError.message.includes('Unauthorized')) {
+              console.log('Profile load failed due to auth error, user not authenticated')
+              setState({ user: null, isAuthenticated: false, isLoading: false, error: null })
+            } else {
+              // Если другая ошибка, всё равно считаем авторизованным
+              setState({ user: null, isAuthenticated: true, isLoading: false, error: null })
+            }
+          }
         } else {
-          setState(prev => ({ ...prev, isLoading: false }))
+          console.log('User not authenticated')
+          setState({ user: null, isAuthenticated: false, isLoading: false, error: null })
         }
       } catch (e: any) {
+        console.error('Auth initialization error:', e)
         setState({ user: null, isAuthenticated: false, isLoading: false, error: e?.message || null })
       }
     })()
@@ -40,11 +59,25 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const login: AuthContextType['login'] = async ({ username, password }) => {
     try {
+      console.log('Starting login process...')
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
+      
       await loginWithPasswordGrant({ username, password })
-      const profile = await apiGet<User>('/user/profile')
-      setState({ user: profile, isAuthenticated: true, isLoading: false, error: null })
-      return { success: true, user: profile }
+      console.log('Login successful, loading profile...')
+      
+      try {
+        const profile = await apiGet<User>('/user/profile')
+        console.log('Profile loaded:', profile)
+        setState({ user: profile, isAuthenticated: true, isLoading: false, error: null })
+        return { success: true, user: profile }
+      } catch (profileError) {
+        console.error('Failed to load profile after login:', profileError)
+        // Если профиль не загрузился, но токен есть, всё равно считаем авторизованным
+        setState({ user: null, isAuthenticated: true, isLoading: false, error: null })
+        return { success: true, user: null }
+      }
     } catch (e: any) {
+      console.error('Login error:', e)
       const msg = e?.message || 'Ошибка авторизации'
       setState(prev => ({ ...prev, isLoading: false, error: msg }))
       return { success: false, error: msg }
@@ -53,7 +86,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = () => {
     setState({ user: null, isAuthenticated: false, isLoading: false, error: null })
-    try { keycloak.logout({ redirectUri: window.location.origin }) } catch {}
+    try { 
+      // Очищаем токены без перенаправления
+      keycloak.clearToken()
+      // Очищаем токены из localStorage
+      clearTokens()
+    } catch {}
   }
 
   const value = useMemo<AuthContextType>(() => ({ ...state, login, logout }), [state])
@@ -71,4 +109,24 @@ export const useAuthContext = () => {
     throw new Error('useAuthContext must be used within an AuthProvider')
   }
   return context
+}
+
+// Компонент для условного отображения контента админам
+interface AdminOnlyProps {
+  children: ReactNode
+  fallback?: ReactNode
+}
+
+export const AdminOnly = ({ children, fallback }: AdminOnlyProps) => {
+  const { user } = useAuthContext()
+  
+  // Проверяем, есть ли у пользователя роль admin
+  // Временно возвращаем true для тестирования, пока не загрузится профиль с ролями
+  const isAdmin = (user as any)?.roles?.includes('admin') || false
+  
+  if (!isAdmin) {
+    return <>{fallback || null}</>
+  }
+
+  return <>{children}</>
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { apiPost } from '../../../shared/lib/api/client'
-import { Activity, UserPlus, Star, X } from 'lucide-react'
+import { userService, type CreateUserRequest } from '../../../shared/lib/api/userService'
+import { Activity, UserPlus, Star, X, AlertCircle } from 'lucide-react'
 
 interface CreateUserPopupProps {
   isOpen: boolean
@@ -13,46 +13,62 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [userRoles, setUserRoles] = useState('user')
   const [creating, setCreating] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [validationErrors, setValidationErrors] = useState<string[]>([])
+
+  const resetForm = () => {
+    setUsername('')
+    setEmail('')
+    setFirstName('')
+    setLastName('')
+    setPassword('')
+    setConfirmPassword('')
+    setUserRoles('user')
+    setValidationErrors([])
+  }
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault()
     setCreating(true)
     setMessage(null)
+    setValidationErrors([])
+    
     try {
       // Подготавливаем данные для отправки
-      const userData = {
+      const userData: CreateUserRequest = {
         username: username.trim(),
-        email: email.trim() || undefined,
-        first_name: firstName.trim() || undefined,
-        last_name: lastName.trim() || undefined,
+        email: email.trim(),
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
         password: password,
         roles: userRoles.split(',').map(s => s.trim()).filter(Boolean)
       }
 
-      // Удаляем пустые поля
-      Object.keys(userData).forEach(key => {
-        if (userData[key as keyof typeof userData] === undefined || userData[key as keyof typeof userData] === '') {
-          delete userData[key as keyof typeof userData]
-        }
-      })
+      // Валидация данных
+      const errors = userService.validateUserData(userData)
+      
+      // Проверка совпадения паролей
+      if (password !== confirmPassword) {
+        errors.push('Passwords do not match')
+      }
+      
+      if (errors.length > 0) {
+        setValidationErrors(errors)
+        return
+      }
 
       console.log('Sending user data:', userData)
       
-      const response = await apiPost('/admin/users', userData)
+      const response = await userService.createUser(userData)
       console.log('User creation response:', response)
       
-      setMessage('✅ User created successfully! You can now login with these credentials.')
+      setMessage('✅ Пользователь успешно создан! Теперь можно войти с этими учетными данными.')
       
       // Reset form
-      setUsername('')
-      setEmail('')
-      setFirstName('')
-      setLastName('')
-      setPassword('')
-      setUserRoles('user')
+      resetForm()
       
       // Close popup after 3 seconds
       setTimeout(() => {
@@ -61,25 +77,7 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
       }, 3000)
     } catch (e: any) {
       console.error('Error creating user:', e)
-      let errorMessage = 'Error creating user'
-      
-      if (e?.message) {
-        // Парсим сообщение об ошибке для более понятного отображения
-        if (e.message.includes('HTTP 400')) {
-          errorMessage = 'Invalid user data. Please check all fields.'
-        } else if (e.message.includes('HTTP 401')) {
-          errorMessage = 'Unauthorized. Please login again.'
-        } else if (e.message.includes('HTTP 403')) {
-          errorMessage = 'Access denied. Admin role required.'
-        } else if (e.message.includes('HTTP 409')) {
-          errorMessage = 'User already exists with this username or email.'
-        } else if (e.message.includes('HTTP 500')) {
-          errorMessage = 'Server error. Please try again later.'
-        } else {
-          errorMessage = e.message
-        }
-      }
-      
+      const errorMessage = userService.formatApiError(e)
       setMessage(`❌ ${errorMessage}`)
     } finally {
       setCreating(false)
@@ -88,6 +86,8 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
 
   const handleClose = () => {
     setMessage(null)
+    setValidationErrors([])
+    resetForm()
     onClose()
   }
 
@@ -95,7 +95,7 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6 w-full max-w-md">
+      <div className="bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
@@ -103,8 +103,8 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
               <UserPlus className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">Create New User</h3>
-              <p className="text-sm text-slate-400">Add a new user to the system</p>
+              <h3 className="text-lg font-semibold text-white">Создать пользователя</h3>
+              <p className="text-sm text-slate-400">Добавить нового пользователя в систему</p>
             </div>
           </div>
           <button
@@ -114,6 +114,21 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
             <X className="h-5 w-5 text-slate-400" />
           </button>
         </div>
+
+        {/* Validation Errors */}
+        {validationErrors.length > 0 && (
+          <div className="mb-4 p-3 rounded-lg bg-red-500/20 border border-red-500/30">
+            <div className="flex items-center space-x-2 mb-2">
+              <AlertCircle className="h-4 w-4 text-red-400" />
+              <span className="text-sm font-medium text-red-400">Ошибки валидации:</span>
+            </div>
+            <ul className="text-sm text-red-300 space-y-1">
+              {validationErrors.map((error, index) => (
+                <li key={index}>• {error}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Message */}
         {message && (
@@ -133,14 +148,14 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
               htmlFor="username" 
               className="block text-sm font-medium text-slate-400 mb-2"
             >
-              Username *
+              Имя пользователя *
             </label>
             <input
               id="username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter username"
+              placeholder="Введите имя пользователя"
               required
               className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
             />
@@ -151,7 +166,7 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
               htmlFor="email" 
               className="block text-sm font-medium text-slate-400 mb-2"
             >
-              Email Address
+              Email адрес *
             </label>
             <input
               id="email"
@@ -159,42 +174,47 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="user@example.com"
+              required
               className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
             />
           </div>
           
-          <div>
-            <label 
-              htmlFor="firstName" 
-              className="block text-sm font-medium text-slate-400 mb-2"
-            >
-              First Name
-            </label>
-            <input
-              id="firstName"
-              type="text"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              placeholder="Enter first name"
-              className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-            />
-          </div>
-          
-          <div>
-            <label 
-              htmlFor="lastName" 
-              className="block text-sm font-medium text-slate-400 mb-2"
-            >
-              Last Name
-            </label>
-            <input
-              id="lastName"
-              type="text"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              placeholder="Enter last name"
-              className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label 
+                htmlFor="firstName" 
+                className="block text-sm font-medium text-slate-400 mb-2"
+              >
+                Имя *
+              </label>
+              <input
+                id="firstName"
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="Введите имя"
+                required
+                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+              />
+            </div>
+            
+            <div>
+              <label 
+                htmlFor="lastName" 
+                className="block text-sm font-medium text-slate-400 mb-2"
+              >
+                Фамилия *
+              </label>
+              <input
+                id="lastName"
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Введите фамилию"
+                required
+                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+              />
+            </div>
           </div>
           
           <div>
@@ -202,15 +222,35 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
               htmlFor="password" 
               className="block text-sm font-medium text-slate-400 mb-2"
             >
-              Password *
+              Пароль *
             </label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Create a strong password"
+              placeholder="Создайте надежный пароль"
               required
+              minLength={8}
+              className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+            />
+          </div>
+
+          <div>
+            <label 
+              htmlFor="confirmPassword" 
+              className="block text-sm font-medium text-slate-400 mb-2"
+            >
+              Подтвердите пароль *
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Повторите пароль"
+              required
+              minLength={8}
               className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
             />
           </div>
@@ -220,16 +260,21 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
               htmlFor="roles" 
               className="block text-sm font-medium text-slate-400 mb-2"
             >
-              User Roles
+              Роли пользователя
             </label>
-            <input
+            <select
               id="roles"
-              type="text"
               value={userRoles}
               onChange={(e) => setUserRoles(e.target.value)}
-              placeholder="user, admin, developer"
-              className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-            />
+              className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+            >
+              <option value="user">Пользователь</option>
+              <option value="admin">Администратор</option>
+              <option value="user,admin">Пользователь и Администратор</option>
+            </select>
+            <p className="text-xs text-slate-500 mt-1">
+              Или введите роли через запятую: user, admin, developer
+            </p>
           </div>
           
           <div className="flex justify-end space-x-3 pt-4">
@@ -238,7 +283,7 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
               onClick={handleClose}
               className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
             >
-              Cancel
+              Отмена
             </button>
             <button 
               type="submit" 
@@ -248,12 +293,12 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
               {creating ? (
                 <>
                   <Activity className="h-4 w-4 animate-spin" />
-                  <span>Creating...</span>
+                  <span>Создание...</span>
                 </>
               ) : (
                 <>
                   <Star className="h-4 w-4" />
-                  <span>Create User</span>
+                  <span>Создать пользователя</span>
                 </>
               )}
             </button>

@@ -77,7 +77,7 @@ export const LanguageSwitcher: React.FC = () => {
               left: 0,
               right: 0,
               bottom: 0,
-              zIndex: 10
+              zIndex: 50
             }}
             onClick={() => setIsOpen(false)}
           />
@@ -89,14 +89,14 @@ export const LanguageSwitcher: React.FC = () => {
               top: '100%',
               right: 0,
               marginTop: '8px',
-              background: 'rgba(0, 0, 0, 0.8)',
+              background: 'rgba(0, 0, 0, 0.95)',
               backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
               borderRadius: '12px',
               padding: '8px',
               minWidth: '140px',
-              zIndex: 20,
-              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5)'
+              zIndex: 100,
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.8)'
             }}
           >
             {languages.map((language) => (
