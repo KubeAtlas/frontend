@@ -39,7 +39,7 @@ export const UserInfo: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg p-4">
+      <div className="unified-card p-4">
         <div className="text-slate-400">Загрузка информации о пользователе...</div>
       </div>
     )
@@ -47,7 +47,7 @@ export const UserInfo: React.FC = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg p-4">
+      <div className="unified-card p-4">
         <div className="text-red-400">Пользователь не авторизован</div>
       </div>
     )
@@ -55,12 +55,12 @@ export const UserInfo: React.FC = () => {
 
   if (error) {
     return (
-      <div className="bg-slate-800/50 backdrop-blur-sm border border-red-500/50 rounded-lg p-4">
+      <div className="unified-card p-4 border-red-500/50">
         <div className="text-red-400 mb-2">Ошибка загрузки данных:</div>
         <div className="text-slate-300 text-sm">{error}</div>
         <button 
           onClick={loadUserData}
-          className="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
+          className="unified-button mt-3"
         >
           Попробовать снова
         </button>
@@ -69,8 +69,8 @@ export const UserInfo: React.FC = () => {
   }
 
   return (
-    <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg p-4 space-y-4">
-      <h3 className="text-lg font-semibold text-white">Информация о пользователе</h3>
+    <div className="space-y-4">
+      <h3 className="card-title">Информация о пользователе</h3>
       
       {loading && (
         <div className="text-slate-400">Загрузка...</div>
@@ -137,7 +137,7 @@ export const UserInfo: React.FC = () => {
       <button 
         onClick={loadUserData}
         disabled={loading}
-        className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white rounded-lg text-sm"
+        className="unified-button w-full disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? 'Загрузка...' : 'Обновить данные'}
       </button>
