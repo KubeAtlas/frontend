@@ -153,8 +153,22 @@ export async function ensureToken(minValiditySeconds = 30) {
       if (payload.exp && payload.exp > now + minValiditySeconds) {
         return keycloak.token
       } else {
-        console.log('Keycloak token is expired, clearing...')
-        clearTokens()
+        console.log('Keycloak token is expired, trying to update...')
+        try {
+          // Пытаемся обновить токен
+          const refreshed = await keycloak.updateToken(minValiditySeconds)
+          if (refreshed) {
+            console.log('Token refreshed successfully')
+            saveTokens()
+            return keycloak.token
+          } else {
+            console.log('Failed to refresh token, clearing...')
+            clearTokens()
+          }
+        } catch (error) {
+          console.error('Failed to refresh token:', error)
+          clearTokens()
+        }
       }
     } catch (error) {
       console.error('Failed to check Keycloak token validity:', error)
@@ -173,8 +187,23 @@ export async function ensureToken(minValiditySeconds = 30) {
         console.log('Using token from localStorage')
         return token
       } else {
-        console.log('LocalStorage token is expired, clearing...')
-        clearTokens()
+        console.log('LocalStorage token is expired, trying to refresh...')
+        try {
+          // Пытаемся обновить токен через Keycloak
+          if (keycloak.authenticated) {
+            const refreshed = await keycloak.updateToken(minValiditySeconds)
+            if (refreshed) {
+              console.log('Token refreshed from localStorage')
+              saveTokens()
+              return keycloak.token
+            }
+          }
+          console.log('Failed to refresh token, clearing...')
+          clearTokens()
+        } catch (error) {
+          console.error('Failed to refresh token from localStorage:', error)
+          clearTokens()
+        }
       }
     } catch (error) {
       console.error('Failed to check localStorage token validity:', error)
