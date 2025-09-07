@@ -89,7 +89,10 @@ export function AppSidebar() {
           </div>
           
           <div className="space-y-3">
-            <div className="unified-nav-item">
+            <div 
+              className="unified-nav-item cursor-pointer hover:bg-slate-700/50 transition-colors"
+              onClick={() => navigate('/users')}
+            >
               <div className="icon-container-small">
                 <Users className="h-4 w-4 text-blue-400" />
               </div>

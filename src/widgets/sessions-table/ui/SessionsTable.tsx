@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import type { UserSession } from '../../../shared/lib/api/types'
 import { SessionService } from '../../../shared/lib/api/sessionService'
+import { useLocale } from '../../../shared/lib/locale/LocaleContext'
 
 interface SessionsTableProps {
   userId?: string // Если передан, показываем сессии конкретного пользователя (для админов)
@@ -11,6 +12,7 @@ export const SessionsTable: React.FC<SessionsTableProps> = ({
   userId, 
   onSessionRevoked 
 }) => {
+  const { t } = useLocale()
   const [sessions, setSessions] = useState<UserSession[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -47,17 +49,17 @@ export const SessionsTable: React.FC<SessionsTableProps> = ({
           setSessions(sessionsData)
         } else {
           console.error('sessions field is not an array:', sessionsData)
-          setError('Неверный формат данных сессий')
+          setError(t('sessions_format_error'))
           setSessions([])
         }
       } else {
         console.error('Expected array but got:', userSessions)
-        setError('Неверный формат данных сессий')
+        setError(t('sessions_format_error'))
         setSessions([])
       }
     } catch (err) {
       console.error('Error loading sessions:', err)
-      setError(err instanceof Error ? err.message : 'Ошибка загрузки сессий')
+      setError(err instanceof Error ? err.message : t('sessions_load_error'))
       setSessions([])
     } finally {
       setLoading(false)
@@ -81,14 +83,14 @@ export const SessionsTable: React.FC<SessionsTableProps> = ({
       onSessionRevoked?.()
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка удаления сессии')
+      setError(err instanceof Error ? err.message : t('session_delete_error'))
     } finally {
       setRevokingSessionId(null)
     }
   }
 
   const handleRevokeAllSessions = async () => {
-    if (!confirm('Вы уверены, что хотите закрыть все сессии?')) {
+    if (!confirm(t('confirm_close_all_sessions'))) {
       return
     }
 
@@ -108,7 +110,7 @@ export const SessionsTable: React.FC<SessionsTableProps> = ({
       onSessionRevoked?.()
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка удаления сессий')
+      setError(err instanceof Error ? err.message : t('sessions_delete_error'))
     } finally {
       setLoading(false)
     }
@@ -121,8 +123,8 @@ export const SessionsTable: React.FC<SessionsTableProps> = ({
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-600 border-t-blue-500"></div>
           <div className="absolute inset-0 rounded-full h-12 w-12 border-4 border-transparent border-t-blue-400 animate-pulse"></div>
         </div>
-        <span className="mt-4 text-slate-300 text-lg font-medium">Загрузка сессий...</span>
-        <span className="mt-1 text-slate-500 text-sm">Получаем данные с сервера</span>
+        <span className="mt-4 text-slate-300 text-lg font-medium">{t('loading_sessions')}</span>
+        <span className="mt-1 text-slate-500 text-sm">{t('getting_server_data')}</span>
       </div>
     )
   }
@@ -137,7 +139,7 @@ export const SessionsTable: React.FC<SessionsTableProps> = ({
             </svg>
           </div>
           <div className="ml-3 flex-1">
-            <h3 className="text-sm font-semibold text-red-300">Ошибка загрузки сессий</h3>
+            <h3 className="text-sm font-semibold text-red-300">{t('sessions_load_error')}</h3>
             <p className="mt-1 text-sm text-red-200">{error}</p>
             <button 
               onClick={loadSessions}
@@ -146,7 +148,7 @@ export const SessionsTable: React.FC<SessionsTableProps> = ({
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Попробовать снова
+              {t('try_again')}
             </button>
           </div>
         </div>
@@ -162,8 +164,8 @@ export const SessionsTable: React.FC<SessionsTableProps> = ({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
         </div>
-        <h3 className="text-lg font-semibold text-slate-200 mb-2">Нет активных сессий</h3>
-        <p className="text-slate-400">У пользователя нет активных сессий в данный момент</p>
+        <h3 className="text-lg font-semibold text-slate-200 mb-2">{t('no_active_sessions')}</h3>
+        <p className="text-slate-400">{t('no_active_sessions_message')}</p>
       </div>
     )
   }
@@ -173,7 +175,7 @@ export const SessionsTable: React.FC<SessionsTableProps> = ({
       {/* Заголовок с кнопкой удаления всех сессий */}
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-bold text-white">
-          Активные сессии ({sessions.length})
+          {t('active_sessions_count')} ({sessions.length})
         </h3>
         <button
           onClick={handleRevokeAllSessions}
@@ -183,7 +185,7 @@ export const SessionsTable: React.FC<SessionsTableProps> = ({
           <svg className="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
-          Закрыть все сессии
+          {t('close_all_sessions')}
         </button>
       </div>
 
@@ -193,22 +195,22 @@ export const SessionsTable: React.FC<SessionsTableProps> = ({
           <thead className="bg-slate-700/50">
             <tr>
               <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                ID сессии
+                {t('session_id')}
               </th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                IP адрес
+                {t('ip_address')}
               </th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                Браузер / ОС
+                {t('browser_os')}
               </th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                Начало сессии
+                {t('session_start')}
               </th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                Последняя активность
+                {t('last_activity')}
               </th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                Действия
+                {t('actions')}
               </th>
             </tr>
           </thead>
@@ -229,7 +231,7 @@ export const SessionsTable: React.FC<SessionsTableProps> = ({
                           <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                           </svg>
-                          Текущая
+                          {t('current')}
                         </span>
                       )}
                     </div>
@@ -283,14 +285,14 @@ export const SessionsTable: React.FC<SessionsTableProps> = ({
                               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            Удаление...
+                            {t('deleting')}
                           </>
                         ) : (
                           <>
                             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
-                            Удалить
+                            {t('delete')}
                           </>
                         )}
                       </button>
@@ -299,7 +301,7 @@ export const SessionsTable: React.FC<SessionsTableProps> = ({
                         <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
-                        Текущая сессия
+                        {t('current_session')}
                       </span>
                     )}
                   </td>

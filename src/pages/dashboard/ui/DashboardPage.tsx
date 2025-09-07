@@ -5,17 +5,15 @@ import { AppSidebar } from '../../../widgets/sidebar'
 import { CreateUserPopup } from '../../../widgets/create-user-popup'
 import { UserSessionManager } from '../../../widgets/user-session-manager'
 import { LanguageSwitcher } from '../../../widgets/language-switcher/ui/LanguageSwitcher'
-import { StatisticsCard } from '../../../widgets/statistics-card'
-import { SystemStatusCard } from '../../../widgets/system-status-card'
 import { UsersTable } from '../../../widgets/users-table'
 import { EditUserModal } from '../../../widgets/edit-user-modal'
 import { useLocale } from '../../../shared/lib/locale/LocaleContext'
-import { useAuthContext, AdminOnly } from '../../../app/providers/AuthProvider'
+import { useAuthContext } from '../../../app/providers/AuthProvider'
 import { useStatistics } from '../../../shared/hooks/useStatistics'
 import { useUsers } from '../../../shared/hooks/useUserManagement'
 import type { User, UpdateUserRequest } from '../../../shared/lib/api/types'
 
-import { UserPlus, Crown, Users, Database, Sparkles, Activity, Settings, Shield } from 'lucide-react'
+import { Crown, Users, Database, Sparkles, Activity, Settings } from 'lucide-react'
 
 
 
@@ -146,26 +144,16 @@ export const DashboardPage = () => {
                 {/* Language Switcher */}
                 <LanguageSwitcher />
 
-                {/* Create User Button - Only for Admins */}
-                <AdminOnly>
-                  <button 
-                    onClick={() => setIsCreateUserPopupOpen(true)}
-                    className="unified-button"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    <span>{t('create_user')}</span>
-                  </button>
-                </AdminOnly>
                 
                 {/* Refresh Statistics Button */}
                 <button 
                   onClick={refetchStatistics}
                   disabled={statisticsLoading}
                   className="unified-button bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50"
-                  title="Обновить статистику"
+                  title={t('update')}
                 >
                   <Sparkles className={`h-4 w-4 ${statisticsLoading ? 'animate-spin' : ''}`} />
-                  <span>Обновить</span>
+                  <span>{t('update')}</span>
                 </button>
 
                 {/* Session Management Button - Only for current user or admins */}
@@ -175,7 +163,7 @@ export const DashboardPage = () => {
                     className="unified-button bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700"
                   >
                     <Settings className="h-4 w-4" />
-                    <span>Сессии</span>
+                    <span>{t('sessions')}</span>
                   </button>
                 )}
               </div>
@@ -183,58 +171,127 @@ export const DashboardPage = () => {
           </div>
           
           <main className="flex-1 p-6 space-y-6">
-            {/* Users Table */}
+            {/* Users Table - Admin Dashboard */}
             <UsersTable
               onCreateUser={() => setIsCreateUserPopupOpen(true)}
               onEditUser={handleEditUser}
               onDeleteUser={handleDeleteUser}
             />
 
-            {/* Stats Cards - Vertical Layout */}
-            <div className="space-y-4">
-              {/* Total Users Card */}
-              <StatisticsCard
-                title={t('total_users')}
-                value={statistics?.total_users?.value || 0}
-                change={statistics?.total_users || { value: 0, change_percent: 0, change_period: '' }}
-                icon={<Users className="h-5 w-5" />}
-                loading={statisticsLoading}
-                error={statisticsError}
-              />
-
-              {/* Active Sessions Card */}
-              <StatisticsCard
-                title={t('active_sessions')}
-                value={statistics?.active_sessions?.value || 0}
-                change={statistics?.active_sessions || { value: 0, change_percent: 0, change_period: '' }}
-                icon={<Activity className="h-5 w-5" />}
-                loading={statisticsLoading}
-                error={statisticsError}
-              />
-
-              {/* System Status Card */}
-              <SystemStatusCard
-                systemStatus={statistics?.system_status || { percentage: 0, status: 'Загрузка...', details: [] }}
-                loading={statisticsLoading}
-                error={statisticsError}
-              />
-
-              {/* Admin Panel Card - Only for Admins */}
-              <AdminOnly>
-                <div className="unified-card p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="card-subtitle">Админ панель</p>
-                      <p className="text-xl font-bold text-white">Активна</p>
-                      <p className="text-red-400 text-xs">Расширенные права доступа</p>
-                    </div>
-                    <div className="icon-container-small bg-red-500/20">
-                      <Shield className="h-5 w-5 text-red-400" />
+            {/* Statistics Overview - Horizontal Grid Layout */}
+            <div className="unified-card p-6">
+              <div className="mb-6">
+                <h2 className="text-xl font-bold text-white mb-2">{t('system_overview')}</h2>
+                <p className="text-slate-400 text-sm">{t('key_indicators')}</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Total Users Card */}
+                <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-xl p-6 hover:from-blue-500/15 hover:to-blue-600/10 transition-all duration-200 group">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-slate-400 text-sm font-medium">{t('total_users')}</h3>
+                    <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
+                      <Users className="h-5 w-5 text-blue-400" />
                     </div>
                   </div>
+                  
+                  <div className="space-y-2">
+                    <div className="text-3xl font-bold text-white">
+                      {statisticsLoading ? (
+                        <div className="h-8 bg-slate-600 rounded animate-pulse"></div>
+                      ) : (
+                        (statistics?.total_users?.value || 0).toLocaleString('ru-RU')
+                      )}
+                    </div>
+                    
+                    {!statisticsLoading && !statisticsError && statistics?.total_users && (
+                      <div className={`text-sm font-medium flex items-center ${
+                        statistics.total_users.change_percent >= 0 ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        <span className="mr-1">{statistics.total_users.change_percent >= 0 ? '↗' : '↘'}</span>
+                        <span>
+                          {statistics.total_users.change_percent >= 0 ? '+' : ''}{Math.round(statistics.total_users.change_percent * 10) / 10}% {statistics.total_users.change_period}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {statisticsError && (
+                      <div className="text-red-400 text-xs">{t('loading_error')}</div>
+                    )}
+                  </div>
                 </div>
-              </AdminOnly>
 
+                {/* Active Sessions Card */}
+                <div className="bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 rounded-xl p-6 hover:from-green-500/15 hover:to-green-600/10 transition-all duration-200 group">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-slate-400 text-sm font-medium">{t('active_sessions')}</h3>
+                    <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center group-hover:bg-green-500/30 transition-colors">
+                      <Activity className="h-5 w-5 text-green-400" />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="text-3xl font-bold text-white">
+                      {statisticsLoading ? (
+                        <div className="h-8 bg-slate-600 rounded animate-pulse"></div>
+                      ) : (
+                        (statistics?.active_sessions?.value || 0).toLocaleString('ru-RU')
+                      )}
+                    </div>
+                    
+                    {!statisticsLoading && !statisticsError && statistics?.active_sessions && (
+                      <div className={`text-sm font-medium flex items-center ${
+                        statistics.active_sessions.change_percent >= 0 ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        <span className="mr-1">{statistics.active_sessions.change_percent >= 0 ? '↗' : '↘'}</span>
+                        <span>
+                          {statistics.active_sessions.change_percent >= 0 ? '+' : ''}{Math.round(statistics.active_sessions.change_percent * 10) / 10}% {statistics.active_sessions.change_period}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {statisticsError && (
+                      <div className="text-red-400 text-xs">{t('loading_error')}</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* System Status Card */}
+                <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl p-6 hover:from-purple-500/15 hover:to-purple-600/10 transition-all duration-200 group">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-slate-400 text-sm font-medium">{t('system_status')}</h3>
+                    <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
+                      <svg className="h-5 w-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="text-3xl font-bold text-white">
+                      {statisticsLoading ? (
+                        <div className="h-8 bg-slate-600 rounded animate-pulse"></div>
+                      ) : (
+                        `${Math.round((statistics?.system_status?.percentage || 0))}%`
+                      )}
+                    </div>
+                    
+                    {!statisticsLoading && !statisticsError && statistics?.system_status && (
+                      <div className={`text-sm font-medium ${
+                        statistics.system_status.status.toLowerCase().includes('работают') || 
+                        statistics.system_status.status.toLowerCase().includes('operational') 
+                          ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {statistics.system_status.status}
+                      </div>
+                    )}
+                    
+                    {statisticsError && (
+                      <div className="text-red-400 text-xs">{t('loading_error')}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
 

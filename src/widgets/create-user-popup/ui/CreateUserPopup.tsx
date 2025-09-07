@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { userService, type CreateUserRequest } from '../../../shared/lib/api/userService'
+import { useLocale } from '../../../shared/lib/locale/LocaleContext'
 import { Activity, UserPlus, Star, X, AlertCircle } from 'lucide-react'
 
 interface CreateUserPopupProps {
@@ -8,6 +9,7 @@ interface CreateUserPopupProps {
 }
 
 export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
+  const { t } = useLocale()
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [firstName, setFirstName] = useState('')
@@ -65,7 +67,7 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
       const response = await userService.createUser(userData)
       console.log('User creation response:', response)
       
-      setMessage('✅ Пользователь успешно создан! Теперь можно войти с этими учетными данными.')
+      setMessage(t('user_created_success'))
       
       // Reset form
       resetForm()
@@ -103,8 +105,8 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
               <UserPlus className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">Создать пользователя</h3>
-              <p className="text-sm text-slate-400">Добавить нового пользователя в систему</p>
+              <h3 className="text-lg font-semibold text-white">{t('create_user_popup')}</h3>
+              <p className="text-sm text-slate-400">{t('add_new_user')}</p>
             </div>
           </div>
           <button
@@ -120,7 +122,7 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
           <div className="mb-4 p-3 rounded-lg bg-red-500/20 border border-red-500/30">
             <div className="flex items-center space-x-2 mb-2">
               <AlertCircle className="h-4 w-4 text-red-400" />
-              <span className="text-sm font-medium text-red-400">Ошибки валидации:</span>
+              <span className="text-sm font-medium text-red-400">{t('validation_errors')}</span>
             </div>
             <ul className="text-sm text-red-300 space-y-1">
               {validationErrors.map((error, index) => (
@@ -148,14 +150,14 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
               htmlFor="username" 
               className="block text-sm font-medium text-slate-400 mb-2"
             >
-              Имя пользователя *
+              {t('username')} *
             </label>
             <input
               id="username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Введите имя пользователя"
+              placeholder={t('enter_username_placeholder')}
               required
               className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
             />
@@ -166,14 +168,14 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
               htmlFor="email" 
               className="block text-sm font-medium text-slate-400 mb-2"
             >
-              Email адрес *
+              {t('email_address')} *
             </label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="user@example.com"
+              placeholder={t('enter_email_placeholder')}
               required
               className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
             />
@@ -185,14 +187,14 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
                 htmlFor="firstName" 
                 className="block text-sm font-medium text-slate-400 mb-2"
               >
-                Имя *
+                {t('first_name')} *
               </label>
               <input
                 id="firstName"
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                placeholder="Введите имя"
+                placeholder={t('enter_first_name_placeholder')}
                 required
                 className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
               />
@@ -203,14 +205,14 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
                 htmlFor="lastName" 
                 className="block text-sm font-medium text-slate-400 mb-2"
               >
-                Фамилия *
+                {t('last_name')} *
               </label>
               <input
                 id="lastName"
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                placeholder="Введите фамилию"
+                placeholder={t('enter_last_name_placeholder')}
                 required
                 className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
               />
@@ -222,14 +224,14 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
               htmlFor="password" 
               className="block text-sm font-medium text-slate-400 mb-2"
             >
-              Пароль *
+              {t('password')} *
             </label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Создайте надежный пароль"
+              placeholder={t('create_strong_password')}
               required
               minLength={8}
               className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
@@ -241,14 +243,14 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
               htmlFor="confirmPassword" 
               className="block text-sm font-medium text-slate-400 mb-2"
             >
-              Подтвердите пароль *
+              {t('confirm_password')} *
             </label>
             <input
               id="confirmPassword"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Повторите пароль"
+              placeholder={t('repeat_password')}
               required
               minLength={8}
               className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
@@ -260,7 +262,7 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
               htmlFor="roles" 
               className="block text-sm font-medium text-slate-400 mb-2"
             >
-              Роли пользователя
+              {t('user_roles')}
             </label>
             <select
               id="roles"
@@ -268,12 +270,12 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
               onChange={(e) => setUserRoles(e.target.value)}
               className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
             >
-              <option value="user">Пользователь</option>
-              <option value="admin">Администратор</option>
-              <option value="user,admin">Пользователь и Администратор</option>
+              <option value="user">{t('user_role')}</option>
+              <option value="admin">{t('admin_role')}</option>
+              <option value="guest">Guest</option>
             </select>
             <p className="text-xs text-slate-500 mt-1">
-              Или введите роли через запятую: user, admin, developer
+              {t('roles_help')}
             </p>
           </div>
           
@@ -283,7 +285,7 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
               onClick={handleClose}
               className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
             >
-              Отмена
+              {t('cancel')}
             </button>
             <button 
               type="submit" 
@@ -293,12 +295,12 @@ export const CreateUserPopup = ({ isOpen, onClose }: CreateUserPopupProps) => {
               {creating ? (
                 <>
                   <Activity className="h-4 w-4 animate-spin" />
-                  <span>Создание...</span>
+                  <span>{t('creating')}</span>
                 </>
               ) : (
                 <>
                   <Star className="h-4 w-4" />
-                  <span>Создать пользователя</span>
+                  <span>{t('create_user_button')}</span>
                 </>
               )}
             </button>

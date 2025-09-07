@@ -6,9 +6,20 @@ export class UserManagementService {
   async getAllUsers(): Promise<User[]> {
     try {
       console.log('UserManagementService: Fetching all users...')
-      const response = await apiGet<{users: User[], totalCount: number}>('/admin/users')
+      const response = await apiGet<any>('/admin/users')
       console.log('UserManagementService: Users response:', response)
-      return response.users || []
+      
+      // Проверяем структуру ответа
+      if (Array.isArray(response)) {
+        return response
+      } else if (response && Array.isArray(response.users)) {
+        return response.users
+      } else if (response && Array.isArray(response.data)) {
+        return response.data
+      } else {
+        console.warn('UserManagementService: Unexpected response structure:', response)
+        return []
+      }
     } catch (error) {
       console.error('UserManagementService: Failed to fetch users:', error)
       throw error
@@ -32,9 +43,20 @@ export class UserManagementService {
   async getUserRoles(userId: string): Promise<Role[]> {
     try {
       console.log('UserManagementService: Fetching user roles:', userId)
-      const response = await apiGet<Role[]>(`/admin/users/${userId}/roles`)
+      const response = await apiGet<any>(`/admin/users/${userId}/roles`)
       console.log('UserManagementService: Roles response:', response)
-      return response
+      
+      // Проверяем структуру ответа
+      if (Array.isArray(response)) {
+        return response
+      } else if (response && Array.isArray(response.roles)) {
+        return response.roles
+      } else if (response && Array.isArray(response.data)) {
+        return response.data
+      } else {
+        console.warn('UserManagementService: Unexpected roles response structure:', response)
+        return []
+      }
     } catch (error) {
       console.error('UserManagementService: Failed to fetch user roles:', error)
       throw error

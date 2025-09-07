@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import type { User, UpdateUserRequest } from '../../../shared/lib/api/types'
 import { useUserDetails } from '../../../shared/hooks/useUserManagement'
+import { useLocale } from '../../../shared/lib/locale/LocaleContext'
 import { X, Save, User as UserIcon, Mail, Shield } from 'lucide-react'
 
 interface EditUserModalProps {
@@ -16,6 +17,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
   onClose,
   onSave
 }) => {
+  const { t } = useLocale()
   const { loading: rolesLoading } = useUserDetails(user?.id || '')
   const [formData, setFormData] = useState<UpdateUserRequest>({
     email: '',
@@ -46,18 +48,16 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
       onClose()
     } catch (error) {
       console.error('Failed to save user:', error)
-      alert('Ошибка при сохранении пользователя')
+      alert(t('error_loading_users'))
     } finally {
       setSaving(false)
     }
   }
 
-  const handleRoleToggle = (role: string) => {
+  const handleRoleSelect = (role: string) => {
     setFormData(prev => ({
       ...prev,
-      roles: prev.roles?.includes(role)
-        ? prev.roles.filter(r => r !== role)
-        : [...(prev.roles || []), role]
+      roles: [role] // Устанавливаем только одну роль
     }))
   }
 
@@ -73,7 +73,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
               <UserIcon className="w-4 h-4 text-blue-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Редактировать пользователя</h2>
+              <h2 className="text-xl font-bold text-white">{t('edit_user_popup')}</h2>
               <p className="text-slate-400 text-sm">@{user.username}</p>
             </div>
           </div>
@@ -91,33 +91,33 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white flex items-center">
               <UserIcon className="w-5 h-5 mr-2 text-blue-400" />
-              Основная информация
+              {t('basic_info')}
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Имя
+                  {t('first_name')}
                 </label>
                 <input
                   type="text"
                   value={formData.first_name || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
                   className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Введите имя"
+                  placeholder={t('enter_first_name_placeholder')}
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Фамилия
+                  {t('last_name')}
                 </label>
                 <input
                   type="text"
                   value={formData.last_name || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
                   className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Введите фамилию"
+                  placeholder={t('enter_last_name_placeholder')}
                 />
               </div>
             </div>
@@ -133,7 +133,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
                   value={formData.email || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                   className="w-full pl-10 pr-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Введите email"
+                  placeholder={t('enter_email_placeholder_edit')}
                   required
                 />
               </div>
@@ -144,16 +144,16 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white flex items-center">
               <Shield className="w-5 h-5 mr-2 text-purple-400" />
-              Роли пользователя
+              {t('user_roles')}
             </h3>
             
             {rolesLoading ? (
               <div className="flex items-center justify-center py-4">
                 <div className="animate-spin rounded-full h-6 w-6 border-2 border-slate-600 border-t-blue-500"></div>
-                <span className="ml-3 text-slate-300">Загрузка ролей...</span>
+                <span className="ml-3 text-slate-300">{t('loading_roles')}</span>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {['admin', 'user', 'guest'].map((role) => (
                   <label
                     key={role}
@@ -164,19 +164,21 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
                     }`}
                   >
                     <input
-                      type="checkbox"
+                      type="radio"
+                      name="userRole"
+                      value={role}
                       checked={formData.roles?.includes(role) || false}
-                      onChange={() => handleRoleToggle(role)}
+                      onChange={() => handleRoleSelect(role)}
                       className="sr-only"
                     />
                     <div className="flex items-center space-x-3">
-                      <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                         formData.roles?.includes(role)
                           ? 'bg-blue-500 border-blue-500'
                           : 'border-slate-400'
                       }`}>
                         {formData.roles?.includes(role) && (
-                          <div className="w-2 h-2 bg-white rounded-sm"></div>
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
                         )}
                       </div>
                       <span className="font-medium capitalize">{role}</span>
@@ -194,7 +196,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 text-slate-300 hover:text-white transition-colors"
             >
-              Отмена
+              {t('cancel')}
             </button>
             <button
               type="submit"
@@ -204,12 +206,12 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
               {saving ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                  Сохранение...
+                  {t('save_changes')}
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  Сохранить изменения
+                  {t('save_changes_button')}
                 </>
               )}
             </button>

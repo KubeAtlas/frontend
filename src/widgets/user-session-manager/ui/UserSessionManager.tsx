@@ -1,5 +1,6 @@
 import React from 'react'
 import { Users } from 'lucide-react'
+import { useLocale } from '../../../shared/lib/locale/LocaleContext'
 import { SessionsTable } from '../../sessions-table'
 
 interface UserSessionManagerProps {
@@ -13,6 +14,7 @@ export const UserSessionManager: React.FC<UserSessionManagerProps> = ({
   username,
   onClose
 }) => {
+  const { t } = useLocale()
   return (
     <div className="bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6 w-full max-w-6xl max-h-[80vh] overflow-y-auto">
       {/* Header */}
@@ -22,15 +24,15 @@ export const UserSessionManager: React.FC<UserSessionManagerProps> = ({
             <Users className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-white">Управление сессиями</h3>
-            <p className="text-sm text-slate-400">Пользователь: {username}</p>
+            <h3 className="text-lg font-semibold text-white">{t('session_management')}</h3>
+            <p className="text-sm text-slate-400">{t('user_colon')} {username}</p>
           </div>
         </div>
         {onClose && (
           <button
             onClick={onClose}
             className="p-2 hover:bg-slate-700/50 rounded-lg transition-colors text-slate-400 hover:text-white text-xl font-bold"
-            title="Закрыть"
+            title={t('close')}
           >
             ×
           </button>

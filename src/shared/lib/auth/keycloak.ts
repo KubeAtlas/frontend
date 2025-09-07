@@ -144,6 +144,26 @@ export async function initAuth() {
 }
 
 export async function ensureToken(minValiditySeconds = 30) {
+  // Если minValiditySeconds = -1, принудительно обновляем токен
+  if (minValiditySeconds === -1) {
+    console.log('Forcing token refresh...')
+    try {
+      if (keycloak.authenticated) {
+        const refreshed = await keycloak.updateToken(-1)
+        if (refreshed) {
+          console.log('Token force refreshed successfully')
+          saveTokens()
+          return keycloak.token
+        }
+      }
+      throw new Error('Failed to force refresh token')
+    } catch (error) {
+      console.error('Failed to force refresh token:', error)
+      clearTokens()
+      throw new Error('Authentication failed - please login again')
+    }
+  }
+
   // Сначала проверяем токен в Keycloak
   if (keycloak.authenticated && keycloak.token) {
     try {

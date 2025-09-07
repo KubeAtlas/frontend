@@ -7,6 +7,7 @@ import { apiGet } from '../../shared/lib/api/client'
 interface AuthContextType extends AuthState {
   login: (credentials: { username: string; password: string }) => Promise<{ success: boolean; user?: any; error?: string }>
   logout: () => void
+  isLoggingOut: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -17,6 +18,7 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [state, setState] = useState<AuthState>({ user: null, isAuthenticated: false, isLoading: true, error: null })
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -84,7 +86,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   }
 
-  const logout = () => {
+  const logout = async () => {
+    setIsLoggingOut(true)
+    
+    // Небольшая задержка для показа preloader
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
     setState({ user: null, isAuthenticated: false, isLoading: false, error: null })
     try { 
       // Очищаем токены без перенаправления
@@ -92,9 +99,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Очищаем токены из localStorage
       clearTokens()
     } catch {}
+    
+    // Дополнительная задержка для завершения анимации
+    await new Promise(resolve => setTimeout(resolve, 500))
+    setIsLoggingOut(false)
   }
 
-  const value = useMemo<AuthContextType>(() => ({ ...state, login, logout }), [state])
+  const value = useMemo<AuthContextType>(() => ({ ...state, login, logout, isLoggingOut }), [state, isLoggingOut])
 
   return (
     <AuthContext.Provider value={value}>
@@ -118,12 +129,37 @@ interface AdminOnlyProps {
 }
 
 export const AdminOnly = ({ children, fallback }: AdminOnlyProps) => {
-  const { user } = useAuthContext()
+  const { user, isAuthenticated, isLoading } = useAuthContext()
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
   
-  // Проверяем, есть ли у пользователя роль admin
-  // Временно возвращаем true для тестирования, пока не загрузится профиль с ролями
-  const isAdmin = (user as any)?.roles?.includes('admin') || false
-  
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      setIsAdmin(false)
+      return
+    }
+
+    const checkAdminRole = async () => {
+      try {
+        console.log('Checking admin role for user:', user)
+        const rolesResponse = await apiGet<{ roles: string[] }>('/user/roles')
+        console.log('User roles:', rolesResponse.roles)
+        const hasAdminRole = rolesResponse.roles.includes('admin')
+        console.log('Is admin:', hasAdminRole)
+        setIsAdmin(hasAdminRole)
+      } catch (error) {
+        console.error('Failed to check admin role:', error)
+        setIsAdmin(false)
+      }
+    }
+
+    checkAdminRole()
+  }, [user, isAuthenticated])
+
+  // Показываем fallback пока загружаются роли или если пользователь не админ
+  if (isLoading || isAdmin === null) {
+    return <>{fallback || null}</>
+  }
+
   if (!isAdmin) {
     return <>{fallback || null}</>
   }

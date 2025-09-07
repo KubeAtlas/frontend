@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useLocale } from '../../../shared/lib/locale/LocaleContext'
 import { LanguageSwitcher } from '../../../widgets/language-switcher/ui/LanguageSwitcher'
 import { AnimatedLockIcon } from '../../../shared/ui/AnimatedLockIcon/AnimatedLockIcon'
+import { LoginPreloader } from '../../../shared/ui'
 
 export const LoginPage = () => {
   const { login } = useAuthContext()
@@ -22,6 +23,11 @@ export const LoginPage = () => {
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoginSuccess, setIsLoginSuccess] = useState(false)
+
+  // Показываем preloader при загрузке
+  if (isLoading) {
+    return <LoginPreloader message="Вход в систему" />
+  }
 
   const handleAnimationComplete = () => {
     // Сбрасываем состояние через некоторое время

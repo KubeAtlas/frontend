@@ -14,9 +14,66 @@ export const useUsers = () => {
       console.log('useUsers: Starting to fetch users...')
       setLoading(true)
       setError(null)
-      const data = await userManagementService.getAllUsers()
-      console.log('useUsers: Received users:', data)
-      setUsers(data)
+      
+      // Получаем всех пользователей напрямую из API
+      const usersData = await userManagementService.getAllUsers()
+      console.log('useUsers: Received users from API:', usersData)
+      console.log('useUsers: Users data type:', typeof usersData, 'Is array:', Array.isArray(usersData))
+      
+      // Проверяем, что получили массив пользователей
+      if (!Array.isArray(usersData)) {
+        console.error('useUsers: Expected array of users, got:', usersData)
+        setError('Invalid response format from server')
+        return
+      }
+      
+      // Загружаем роли для каждого пользователя
+      const usersWithRoles = await Promise.all(
+        usersData.map(async (user) => {
+          try {
+            console.log(`useUsers: Loading roles for user ${user.username} (${user.id})...`)
+            
+            // Получаем роли пользователя из API
+            const roles = await userManagementService.getUserRoles(user.id)
+            console.log(`useUsers: Loaded roles for ${user.username}:`, roles)
+            
+            // Преобразуем роли в массив строк
+            const roleNames = Array.isArray(roles) 
+              ? roles.map(role => typeof role === 'string' ? role : role.name || '')
+              : []
+            
+            console.log(`useUsers: Processed roles for ${user.username}:`, roleNames)
+            
+            // Возвращаем пользователя с ролями
+            return {
+              ...user,
+              attributes: {
+                ...user.attributes,
+                roles: roleNames
+              }
+            }
+          } catch (roleError) {
+            console.warn(`useUsers: Failed to load roles for user ${user.username}:`, roleError)
+            // Возвращаем пользователя с пустыми ролями
+            return {
+              ...user,
+              attributes: {
+                ...user.attributes,
+                roles: []
+              }
+            }
+          }
+        })
+      )
+      
+      console.log('useUsers: Users with roles:', usersWithRoles)
+      
+      // Дополнительная отладка ролей
+      usersWithRoles.forEach(user => {
+        console.log(`useUsers: Final roles for ${user.username}:`, user.attributes?.roles)
+      })
+      
+      setUsers(usersWithRoles)
     } catch (err) {
       console.error('useUsers: Failed to fetch users:', err)
       setError(err instanceof Error ? err.message : 'Неизвестная ошибка')
@@ -47,7 +104,11 @@ export const useUsers = () => {
       console.log('useUsers: Updating user:', userId, userData)
       const updatedUser = await userManagementService.updateUser(userId, userData)
       console.log('useUsers: User updated:', updatedUser)
-      await fetchUsers() // Обновляем список
+      
+      // Обновляем весь список пользователей для получения актуальных данных
+      console.log('useUsers: Refreshing users list after update...')
+      await fetchUsers()
+      
       return updatedUser
     } catch (err) {
       console.error('useUsers: Failed to update user:', err)
@@ -67,6 +128,47 @@ export const useUsers = () => {
     }
   }
 
+  const refreshUserRoles = async (userId: string) => {
+    try {
+      console.log('useUsers: Refreshing roles for user:', userId)
+      const roles = await userManagementService.getUserRoles(userId)
+      console.log('useUsers: Refreshed roles:', roles)
+      
+      // Преобразуем роли в массив строк
+      const roleNames = Array.isArray(roles) 
+        ? roles.map(role => typeof role === 'string' ? role : role.name || '')
+        : []
+      
+      // Обновляем роли пользователя в локальном состоянии
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId 
+            ? {
+                ...user,
+                attributes: {
+                  ...user.attributes,
+                  roles: roleNames
+                }
+              }
+            : user
+        )
+      )
+      
+      console.log('useUsers: Updated roles for user:', userId, roleNames)
+      return roles
+    } catch (err: any) {
+      console.error('useUsers: Failed to refresh user roles:', err)
+      
+      // Если это ошибка доступа (403), не показываем модальное окно
+      if (err.message && err.message.includes('403')) {
+        console.warn('useUsers: Access denied for refreshing user roles - this is expected for non-admin users')
+        throw new Error('ACCESS_DENIED')
+      }
+      
+      throw err
+    }
+  }
+
   return { 
     users, 
     loading, 
@@ -74,7 +176,8 @@ export const useUsers = () => {
     refetch: fetchUsers,
     createUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    refreshUserRoles
   }
 }
 
